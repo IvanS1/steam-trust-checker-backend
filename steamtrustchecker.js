@@ -6,6 +6,10 @@ const port = 3000;
 
 const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';
 
+app.get('/', (req, res) => {
+    res.send('¡Servidor funcionando!');
+  });
+
 app.get('/api/profile', async (req, res) => {
     const steamURL = req.query.url;
     if (!steamURL) {

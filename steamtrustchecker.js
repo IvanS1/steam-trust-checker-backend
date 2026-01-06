@@ -4,10 +4,10 @@ const axios = require('axios');
 const path = require('path'); // Añade esto
 
 const app = express();
+const port = process.env.PORT || 3000; // Render usa process.env.PORT
 
-app.use(cors()); // 2. Habilita cors antes de tus rutas
-// IMPORTANTE: Render asigna un puerto automáticamente, usa process.env.PORT
-const port = process.env.PORT || 3000; 
+app.use(cors());
+app.use(express.static(path.join(__dirname, '/')));
 
 const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';
 

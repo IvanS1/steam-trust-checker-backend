@@ -1,13 +1,19 @@
 async function getProfile() {
-    const url = document.getElementById('steam-url').value;
-    if (!url) {
+    const urlInput = document.getElementById('steam-url').value;
+    if (!urlInput) {
         alert('Por favor, ingresa una URL de perfil de Steam.');
         return;
     }
 
     try {
-        // Usa la ruta relativa a tu propia API
-        const response = await fetch(`/api/profile?url=${encodeURIComponent(url)}`);
+        // CORRECCIÓN AQUÍ: No uses la URL de GitHub. 
+        // Usa `/api/profile` para que llame a tu propio backend en Render.
+        const response = await fetch(`/api/profile?url=${encodeURIComponent(urlInput)}`);
+        
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+
         const data = await response.json();
 
         if (data.error) {
@@ -33,6 +39,6 @@ async function getProfile() {
 
     } catch (err) {
         console.error(err);
-        alert('Error al obtener los datos del perfil.');
+        alert('Error al recuperar los datos del perfil. Revisa la consola.');
     }
 }

@@ -1,14 +1,20 @@
 const express = require('express');
 const axios = require('axios');
+const path = require('path'); // Añade esto
 
 const app = express();
-const port = 3000;
+// IMPORTANTE: Render asigna un puerto automáticamente, usa process.env.PORT
+const port = process.env.PORT || 3000; 
 
 const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';
 
+// 1. Servir archivos estáticos (index.html, style.css, app.js)
+app.use(express.static(path.join(__dirname, '/')));
+
+// 2. Ruta para el Home (opcional si usas express.static, pero recomendado)
 app.get('/', (req, res) => {
-    res.send('¡Servidor funcionando!');
-  });
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/api/profile', async (req, res) => {
     const steamURL = req.query.url;
@@ -128,6 +134,7 @@ app.get('/api/profile', async (req, res) => {
     }
 });
 
-app.listen(port, () => {
-    console.log(`Servidor activo en http://localhost:${port}`);
+// IMPORTANTE: Cambia el app.listen para Render
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Servidor activo en el puerto ${port}`);
 });

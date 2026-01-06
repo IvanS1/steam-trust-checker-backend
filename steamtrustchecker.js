@@ -1,8 +1,11 @@
 const express = require('express');
+const cors = require('cors'); // 1. Importa cors
 const axios = require('axios');
 const path = require('path'); // Añade esto
 
 const app = express();
+
+app.use(cors()); // 2. Habilita cors antes de tus rutas
 // IMPORTANTE: Render asigna un puerto automáticamente, usa process.env.PORT
 const port = process.env.PORT || 3000; 
 

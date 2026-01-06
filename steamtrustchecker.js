@@ -1,73 +1,129 @@
 const express = require('express');
 const axios = require('axios');
+
 const app = express();
 const port = 3000;
 
-const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';  // Reemplaza con tu clave de API de Steam.
+const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';
 
-app.use(express.json());
-
-// Ruta para obtener información del perfil de Steam
 app.get('/api/profile', async (req, res) => {
     const steamURL = req.query.url;
     if (!steamURL) {
-        return res.status(400).json({ error: 'URL de Steam es requerida' });
-    }
-
-    // Extraer SteamID de la URL (puede ser un ID personalizado o numérico)
-    const steamIdMatch = steamURL.match(/steamcommunity.com\/(?:id\/([^\/]+)|profiles\/(\d+))/);
-    let steamId = null;
-
-    if (steamIdMatch) {
-        steamId = steamIdMatch[1] || steamIdMatch[2];  // Si es "id/steamID" o "profiles/steamID"
-    }
-
-    if (!steamId) {
-        return res.status(400).json({ error: 'URL de Steam no válida' });
+        return res.status(400).json({ error: 'URL de Steam requerida' });
     }
 
     try {
-        // Solicitar los datos del perfil a la API de Steam
-        const response = await axios.get(`https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/`, {
-            params: {
-                key: STEAM_API_KEY,
-                steamids: steamId
-            }
-        });
+        let steamId64 = null;
 
-        // Verificar si la respuesta contiene datos del jugador
-        const playerData = response.data.response.players[0];
-        
-        if (!playerData) {
+        // ─────────────────────────────
+        // 1️⃣ EXTRAER O RESOLVER STEAMID
+        // ─────────────────────────────
+
+        // profiles/STEAMID64
+        const profileMatch = steamURL.match(/profiles\/(\d{17})/);
+        if (profileMatch) {
+            steamId64 = profileMatch[1];
+        }
+
+        // id/vanityname
+        const vanityMatch = steamURL.match(/id\/([^\/]+)/);
+        if (!steamId64 && vanityMatch) {
+            const vanityName = vanityMatch[1];
+
+            const vanityRes = await axios.get(
+                'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/',
+                {
+                    params: {
+                        key: STEAM_API_KEY,
+                        vanityurl: vanityName
+                    }
+                }
+            );
+
+            if (vanityRes.data.response.success !== 1) {
+                return res.status(404).json({ error: 'Perfil de Steam no encontrado' });
+            }
+
+            steamId64 = vanityRes.data.response.steamid;
+        }
+
+        if (!steamId64) {
+            return res.status(400).json({ error: 'URL de Steam inválida' });
+        }
+
+        // ─────────────────────────────
+        // 2️⃣ DATOS DEL PERFIL
+        // ─────────────────────────────
+
+        const profileRes = await axios.get(
+            'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/',
+            {
+                params: {
+                    key: STEAM_API_KEY,
+                    steamids: steamId64
+                }
+            }
+        );
+
+        const player = profileRes.data.response.players[0];
+        if (!player) {
             return res.status(404).json({ error: 'Perfil de Steam no encontrado' });
         }
 
-        // Calcular el trust factor (lógica simple)
-        const trustFactor = calculateTrustFactor(playerData);
+        // ─────────────────────────────
+        // 3️⃣ JUEGOS Y TIEMPO JUGADO
+        // ─────────────────────────────
 
-        // Devolver los datos en formato JSON
+        const gamesRes = await axios.get(
+            'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
+            {
+                params: {
+                    key: STEAM_API_KEY,
+                    steamid: steamId64,
+                    include_played_free_games: true
+                }
+            }
+        );
+
+        const games = gamesRes.data.response.games || [];
+        const gamesPlayed = games.length;
+
+        const totalPlaytime = games.reduce(
+            (sum, game) => sum + (game.playtime_forever || 0),
+            0
+        );
+
+        // minutos → horas
+        const totalHours = Math.round(totalPlaytime / 60);
+
+        // ─────────────────────────────
+        // 4️⃣ TRUST FACTOR (EJEMPLO)
+        // ─────────────────────────────
+
+        let trustFactor = 40;
+        if (totalHours > 2000) trustFactor = 100;
+        else if (totalHours > 1000) trustFactor = 80;
+        else if (totalHours > 300) trustFactor = 60;
+
+        // ─────────────────────────────
+        // RESPUESTA FINAL
+        // ─────────────────────────────
+
         res.json({
-            profileImage: playerData.avatarfull,
+            profileImage: player.avatarfull,
             stats: {
-                gamesPlayed: playerData.game_count,
-                totalPlaytime: playerData.time_played,
+                gamesPlayed,
+                totalPlaytimeHours: totalHours
             },
-            trustFactor: trustFactor
+            trustFactor
         });
-    } catch (error) {
-        console.error('Error al obtener datos de la API de Steam:', error);
-        res.status(500).json({ error: 'Error al obtener datos del perfil de Steam' });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ error: 'Error al obtener datos de Steam' });
     }
 });
 
-// Lógica para calcular el trust factor (ejemplo básico)
-function calculateTrustFactor(playerData) {
-    const gamesPlayed = playerData.game_count;
-    if (gamesPlayed > 100) return 100;
-    if (gamesPlayed > 50) return 80;
-    return 40;
-}
-
 app.listen(port, () => {
-    console.log(`Servidor corriendo en http://localhost:${port}`);
+    console.log(`Servidor activo en http://localhost:${port}`);
 });

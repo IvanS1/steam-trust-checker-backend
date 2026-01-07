@@ -1,3 +1,5 @@
+Chart.register(ChartDataLabels);
+
 let chart;
 
 /* ───── Ranking local ───── */
@@ -115,9 +117,26 @@ async function getProfile() {
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#ffffff',
+          font: {
+            weight: 'bold',
+            size: 11
+          },
+          formatter: (value) => `${value}h`
+        }
+      },
       scales: {
-        y: { beginAtZero: true }
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => `${value}h`
+          }
+        }
       }
     }
   });

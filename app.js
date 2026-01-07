@@ -162,7 +162,7 @@ async function getProfile() {
         legend: { display: false },
         datalabels: {
           anchor: 'end',
-          align: 'left',
+          align: 'right',
           color: '#ffffff',
           font: {
             weight: 'bold',
@@ -182,7 +182,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 20
+            padding: 25
           }
         }
       }

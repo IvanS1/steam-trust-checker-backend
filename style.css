@@ -1,6 +1,6 @@
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #f4f4f9;
+    background-color: #414141;
     color: #333;
     display: flex;
     justify-content: center;
@@ -12,7 +12,7 @@ body {
 .container {
     text-align: center;
     padding: 20px;
-    background: #fff;
+    background: #252525;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
 }

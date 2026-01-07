@@ -140,6 +140,17 @@
     pointer-events: none;
   }
   .chart-card {
-    overflow: visible;
+    margin-top: 30px;
+    background: #262626;
+    padding: 20px;
+    border-radius: 12px;
+  
+    height: 520px;       /* 🔴 OBLIGATORIO */
+    position: relative; /* 🔴 OBLIGATORIO */
   }
+  .chart-card canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+    
       

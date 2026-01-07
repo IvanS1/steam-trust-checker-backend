@@ -133,38 +133,54 @@ async function getProfile() {
     },
     plugins: [ChartDataLabels, yAxisIconPlugin],
     options: {
-      indexAxis: 'y',
       responsive: true,
+      maintainAspectRatio: false,
+  
+      indexAxis: 'y',
+  
       layout: {
         padding: {
-          left: 200,
+          left: 220,
           right: 20
         }
       },
+  
       plugins: {
         legend: { display: false },
         datalabels: {
           anchor: 'end',
           align: 'right',
           color: '#ffffff',
-          font: { weight: 'bold', size: 11 },
-          formatter: v => `${v}h`
+          font: {
+            weight: 'bold',
+            size: 11
+          },
+          formatter: value => `${value}h`
         }
       },
+  
       scales: {
         x: {
           beginAtZero: true,
-          ticks: { callback: v => `${v}h` }
+          ticks: {
+            callback: v => `${v}h`
+          }
         },
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 30
+            padding: 6
           }
         }
       }
     }
   });
+  window.addEventListener('resize', () => {
+    if (chart) {
+      chart.resize();
+    }
+  });
+    
 
   saveToRanking(data);
   renderRanking();

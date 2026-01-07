@@ -113,7 +113,7 @@ async function getProfile() {
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
   
         // 📐 Posición limpia entre texto y barra
-        const iconX = chartArea.left - 40;
+        const iconX = chartArea.left - 28;
   
         ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
       });
@@ -138,7 +138,7 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 140,
+          left: 200,
           right: 20
         }
       },
@@ -160,7 +160,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 10
+            padding: 4
           }
         }
       }

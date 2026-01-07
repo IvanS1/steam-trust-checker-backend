@@ -108,7 +108,7 @@ const topGames = (data.extra.games || [])
 
 if (chart) chart.destroy();
 
-/* ───── Precargar iconos de Steam ───── */
+/* ───── Precargar iconos Steam ───── */
 const icons = {};
 topGames.forEach(g => {
 const img = new Image();
@@ -116,26 +116,30 @@ img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/icon.jpg
 icons[g.appid] = img;
 });
 
-/* ───── Plugin para dibujar iconos en el eje Y ───── */
+/* ───── Plugin oficial para iconos en eje Y ───── */
 const yAxisIconPlugin = {
 id: 'yAxisIconPlugin',
-afterDraw(chart) {
-  const { ctx, scales: { y } } = chart;
+afterDatasetsDraw(chart) {
+  const { ctx, chartArea, scales: { y } } = chart;
 
-  topGames.forEach((game, index) => {
-    const yPos = y.getPixelForTick(index);
+  ctx.save();
+
+  topGames.forEach(game => {
+    const yPos = y.getPixelForValue(game.name);
     const icon = icons[game.appid];
 
     if (icon && icon.complete) {
       ctx.drawImage(
         icon,
-        y.left - 30,   // posición a la izquierda del texto
+        chartArea.left - 26, // izquierda del texto
         yPos - 9,
         18,
         18
       );
     }
   });
+
+  ctx.restore();
 }
 };
 
@@ -154,7 +158,7 @@ options: {
   responsive: true,
   layout: {
     padding: {
-      left: 50,   // espacio extra para los iconos
+      left: 60,   // espacio para iconos
       right: 20
     }
   },
@@ -186,6 +190,7 @@ options: {
   }
 }
 });
+
 
 
   saveToRanking(data);

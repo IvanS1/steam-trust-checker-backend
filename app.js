@@ -113,9 +113,9 @@ async function getProfile() {
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
   
         // 📐 Posición limpia entre texto y barra
-        const iconX = chartArea.left - 24;
+        const iconX = chartArea.left - 28;
   
-        ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
+        ctx.drawImage(icon, iconX, yPos - 5, 18, 18);
       });
   
       ctx.restore();

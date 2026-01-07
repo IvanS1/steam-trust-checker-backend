@@ -133,7 +133,7 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 80,
+          left: 40,
           right: 20
         }
       },

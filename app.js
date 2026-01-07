@@ -92,96 +92,60 @@ async function getProfile() {
     data.trustFactor > 70 ? 'green' :
     data.trustFactor > 40 ? 'yellow' : 'red';
 
-    /* ───── CHART TOP 20 JUEGOS CON ICONO + HORAS ───── */
+    const topGames = (data.extra.games || [])
+    .map(g => ({
+      name: g.name,
+      minutes:
+        (g.playtime_forever || 0) + (g.playtime_2weeks || 0)
+    }))
+    .filter(g => g.minutes > 0)
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 20);
+  
 
-const topGames = (data.extra.games || [])
-.map(g => ({
-  appid: g.appid,
-  name: g.name,
-  minutes: (g.playtime_forever || 0) + (g.playtime_2weeks || 0)
-}))
-.filter(g => g.minutes > 0)
-.sort((a, b) => b.minutes - a.minutes)
-.slice(0, 20);
+  if (chart) chart.destroy();
 
-if (chart) chart.destroy();
-
-/* Plugin: icono + nombre */
-const iconLabelPlugin = {
-id: 'iconLabelPlugin',
-afterDraw(chart) {
-  const { ctx, scales: { x, y } } = chart;
-  const games = chart.config.topGames;
-
-  ctx.save();
-  ctx.font = '10px Arial';
-  ctx.fillStyle = '#cccccc';
-  ctx.textAlign = 'left';
-
-  games.forEach((game, index) => {
-    const xPos = x.getPixelForTick(index);
-    const yPos = y.bottom + 28;
-
-    const img = new Image();
-    img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.appid}/icon.jpg`;
-
-    img.onload = () => {
-      ctx.drawImage(img, xPos - 18, yPos - 14, 16, 16);
-    };
-
-    ctx.fillText(game.name, xPos + 2, yPos);
-  });
-
-  ctx.restore();
-}
-};
-
-chart = new Chart(document.getElementById('hoursChart'), {
-type: 'bar',
-data: {
-  labels: topGames.map(g => g.name),
-  datasets: [{
-    data: topGames.map(g => Math.round(g.minutes / 60)),
-    backgroundColor: '#4CAF50'
-  }]
-},
-topGames: topGames,
-plugins: [iconLabelPlugin, ChartDataLabels],
-options: {
-  responsive: true,
-  layout: {
-    padding: {
-      top: 40,
-      bottom: 60
-    }
-  },
-  plugins: {
-    legend: { display: false },
-    datalabels: {
-      anchor: 'end',
-      align: 'end',
-      offset: 4,
-      color: '#ffffff',
-      font: {
-        weight: 'bold',
-        size: 11
-      },
-      formatter: value => `${value}h`
-    }
-  },
-  scales: {
-    x: {
-      ticks: { display: false }
+  chart = new Chart(document.getElementById('hoursChart'), {
+    type: 'bar',
+    data: {
+      labels: topGames.map(g => g.name),
+      datasets: [{
+        label: 'Horas jugadas',
+        data: topGames.map(g => Math.round(g.minutes / 60)),
+        backgroundColor: '#4CAF50'
+      }]
     },
-    y: {
-      beginAtZero: true,
-      ticks: {
-        callback: value => `${value}h`
+    options: {
+        responsive: true,
+        layout: {
+          padding: {
+            top: 25
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: '#ffffff',
+            font: {
+              weight: 'bold',
+              size: 11
+            },
+            formatter: (value) => `${value}h`
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => `${value}h`
+            }
+          }
+        }
       }
-    }
-  }
-}
-});
+      
+  });
 
   saveToRanking(data);
   renderRanking();

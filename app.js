@@ -138,7 +138,7 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 200,
+          left: 140,
           right: 20
         }
       },
@@ -160,7 +160,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 4
+            padding: 10
           }
         }
       }

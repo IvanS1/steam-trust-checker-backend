@@ -7,33 +7,42 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="container">
-  <h1>Comprobador de Trust Factor de Steam</h1>
-
-  <input id="steam-url" placeholder="URL del perfil de Steam">
-  <button onclick="getProfile()">Comprobar</button>
-
-  <img id="profile-image">
-  <div id="stats"></div>
+    <div class="container">
+      <h1>Comprobador de Trust Factor de Steam</h1>
   
-  <div id="cs-warning" style="display:none; color:#ffb300; margin-top:10px;">
-    Steam no expone las horas de CS2 para este perfil
-  </div>
+      <!-- Input -->
+      <div class="search-box">
+        <input id="steam-url" placeholder="URL del perfil de Steam">
+        <button onclick="getProfile()">Comprobar</button>
+      </div>
   
-
-  <div id="trust-factor-bar">
-    <div id="trust-factor"></div>
-  </div>
-
-  <div id="smurf-message" style="display:none;">
-    ⚠️ Posible cuenta smurf detectada
-  </div>
-
-  <canvas id="hoursChart"></canvas>
-
-  <div id="ranking"></div>
-</div>
-
-<script src="app.js"></script>
-</body>
+      <!-- Perfil -->
+      <div class="profile-card">
+        <img id="profile-image" />
+  
+        <div class="profile-info">
+          <div id="stats"></div>
+  
+          <div id="cs-warning" class="warning">
+            Steam no expone las horas de CS2 para este perfil
+          </div>
+  
+          <div id="trust-factor-bar">
+            <div id="trust-factor"></div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Gráfica -->
+      <div class="chart-card">
+        <canvas id="hoursChart"></canvas>
+      </div>
+  
+      <!-- Ranking -->
+      <div id="ranking" class="ranking-card"></div>
+    </div>
+  
+    <script src="app.js"></script>
+  </body>
+  
 </html>

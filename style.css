@@ -139,4 +139,7 @@
   #trust-factor-text {
     pointer-events: none;
   }
+  .chart-card {
+    overflow: visible;
+  }
       

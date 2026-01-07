@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '/')));
 
 const STEAM_API_KEY =
-  process.env.STEAM_API_KEY || 'TU_API_KEY_AQUI';
+  process.env.STEAM_API_KEY || 'CE910D32F9508B963444CAFF3F831E0C';
 
 /* ───────── HOME ───────── */
 app.get('/', (req, res) => {

@@ -119,30 +119,31 @@ icons[g.appid] = img;
 
 /* ───── Plugin iconos eje Y ───── */
 const yAxisIconPlugin = {
-id: 'yAxisIconPlugin',
-afterDatasetsDraw(chart) {
-  const { ctx, chartArea, scales: { y } } = chart;
-
-  ctx.save();
-
-  topGames.forEach(game => {
-    const yPos = y.getPixelForValue(game.name);
-    const icon = icons[game.appid];
-
-    if (!icon || !icon.complete || icon.naturalWidth === 0) return;
-
-    ctx.drawImage(
-      icon,
-      chartArea.left - 28,
-      yPos - 9,
-      18,
-      18
-    );
-  });
-
-  ctx.restore();
-}
-};
+    id: 'yAxisIconPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, scales: { y } } = chart;
+  
+      ctx.save();
+  
+      topGames.forEach(game => {
+        const yPos = y.getPixelForValue(game.name);
+        const icon = icons[game.appid];
+  
+        if (!icon || !icon.complete || icon.naturalWidth === 0) return;
+  
+        ctx.drawImage(
+          icon,
+          chartArea.left - 18, // después del texto, antes de la barra
+          yPos - 9,
+          18,
+          18
+        );
+      });
+  
+      ctx.restore();
+    }
+  };
+  
 
 chart = new Chart(document.getElementById('hoursChart'), {
 type: 'bar',
@@ -159,8 +160,8 @@ options: {
   responsive: true,
   layout: {
     padding: {
-      left: 60,
-      right: 100
+      left: 80,
+      right: 20
     }
   },
   plugins: {
@@ -179,9 +180,12 @@ options: {
       ticks: { callback: v => `${v}h` }
     },
     y: {
-      ticks: { color: '#cccccc' }
-    }
-  }
+        ticks: {
+          color: '#cccccc',
+          padding: 32   // espacio entre texto e icono
+        }
+      }
+      
 }
 });
 

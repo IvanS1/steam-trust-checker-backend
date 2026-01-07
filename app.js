@@ -113,7 +113,7 @@ async function getProfile() {
       const ICON_SIZE = 18;
   
       // 📐 posición X centrada entre texto y barra
-      const iconX = chartArea.left - 36;
+      const iconX = chartArea.left - 50;
   
       topGames.forEach(game => {
         const yPos = y.getPixelForValue(game.name);

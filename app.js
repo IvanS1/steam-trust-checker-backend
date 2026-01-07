@@ -182,7 +182,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 6
+            padding: 10
           }
         }
       }

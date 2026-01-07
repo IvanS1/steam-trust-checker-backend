@@ -160,7 +160,7 @@ options: {
   layout: {
     padding: {
       left: 60,
-      right: 20
+      right: 100
     }
   },
   plugins: {

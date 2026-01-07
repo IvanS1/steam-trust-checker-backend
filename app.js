@@ -168,5 +168,5 @@ async function getProfile() {
   });
 
   saveToRanking(data);
-  renderRanking();
+  renderRanking(); 
 }

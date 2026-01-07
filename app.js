@@ -90,8 +90,7 @@ async function getProfile() {
     data.trustFactor > 70 ? 'green' :
     data.trustFactor > 40 ? 'yellow' : 'red';
 
-  /* Chart — TOP 10 JUEGOS RECIENTES + HISTÓRICOS */
-  const topGames = (data.extra.games || [])
+    const topGames = (data.extra.games || [])
     .map(g => ({
       name: g.name,
       minutes:
@@ -99,7 +98,8 @@ async function getProfile() {
     }))
     .filter(g => g.minutes > 0)
     .sort((a, b) => b.minutes - a.minutes)
-    .slice(0, 10);
+    .slice(0, 20);
+  
 
   if (chart) chart.destroy();
 

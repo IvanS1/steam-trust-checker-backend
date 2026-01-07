@@ -98,11 +98,12 @@ const topGames = (data.extra.games || [])
 .map(g => ({
   appid: g.appid,
   name: g.name,
+  icon: g.img_icon_url,
   hours: Math.round(
     ((g.playtime_forever || 0) + (g.playtime_2weeks || 0)) / 60
   )
 }))
-.filter(g => g.hours > 0)
+.filter(g => g.hours > 0 && g.icon)
 .sort((a, b) => b.hours - a.hours)
 .slice(0, 20);
 
@@ -112,11 +113,11 @@ if (chart) chart.destroy();
 const icons = {};
 topGames.forEach(g => {
 const img = new Image();
-img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/icon.jpg`;
+img.src = `https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.icon}.jpg`;
 icons[g.appid] = img;
 });
 
-/* ───── Plugin oficial para iconos en eje Y ───── */
+/* ───── Plugin iconos eje Y ───── */
 const yAxisIconPlugin = {
 id: 'yAxisIconPlugin',
 afterDatasetsDraw(chart) {
@@ -128,15 +129,15 @@ afterDatasetsDraw(chart) {
     const yPos = y.getPixelForValue(game.name);
     const icon = icons[game.appid];
 
-    if (icon && icon.complete) {
-      ctx.drawImage(
-        icon,
-        chartArea.left - 26, // izquierda del texto
-        yPos - 9,
-        18,
-        18
-      );
-    }
+    if (!icon || !icon.complete || icon.naturalWidth === 0) return;
+
+    ctx.drawImage(
+      icon,
+      chartArea.left - 28,
+      yPos - 9,
+      18,
+      18
+    );
   });
 
   ctx.restore();
@@ -158,7 +159,7 @@ options: {
   responsive: true,
   layout: {
     padding: {
-      left: 60,   // espacio para iconos
+      left: 60,
       right: 20
     }
   },
@@ -168,29 +169,21 @@ options: {
       anchor: 'end',
       align: 'right',
       color: '#ffffff',
-      font: {
-        weight: 'bold',
-        size: 11
-      },
-      formatter: value => `${value}h`
+      font: { weight: 'bold', size: 11 },
+      formatter: v => `${v}h`
     }
   },
   scales: {
     x: {
       beginAtZero: true,
-      ticks: {
-        callback: v => `${v}h`
-      }
+      ticks: { callback: v => `${v}h` }
     },
     y: {
-      ticks: {
-        color: '#cccccc'
-      }
+      ticks: { color: '#cccccc' }
     }
   }
 }
 });
-
 
 
   saveToRanking(data);

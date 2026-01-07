@@ -62,6 +62,10 @@ async function getProfile() {
     <p>Amigos visibles: ${data.extra.friendsCount}</p>
   `;
 
+  /* Aviso CS2 */
+  document.getElementById('cs-warning').style.display =
+    data.extra.csDataVisible ? 'none' : 'block';
+
   /* Trust bar */
   const bar = document.getElementById('trust-factor');
   bar.style.width = `${data.trustFactor}%`;
@@ -69,22 +73,19 @@ async function getProfile() {
     data.trustFactor > 70 ? 'green' :
     data.trustFactor > 40 ? 'yellow' : 'red';
 
-  document.getElementById('smurf-message').style.display =
-    data.smurf ? 'block' : 'none';
-
-  /* Chart (2weeks + forever FIX) */
+  /* Chart — TOP 10 JUEGOS RECIENTES + HISTÓRICOS */
   const topGames = (data.extra.games || [])
-  .map(g => ({
-    name: g.name,
-    minutes:
-      (g.playtime_forever || 0) + (g.playtime_2weeks || 0)
-  }))
-  .filter(g => g.minutes > 0)
-  .sort((a, b) => b.minutes - a.minutes)
-  .slice(0, 5);
-
+    .map(g => ({
+      name: g.name,
+      minutes:
+        (g.playtime_forever || 0) + (g.playtime_2weeks || 0)
+    }))
+    .filter(g => g.minutes > 0)
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 10);
 
   if (chart) chart.destroy();
+
   chart = new Chart(document.getElementById('hoursChart'), {
     type: 'bar',
     data: {
@@ -97,7 +98,10 @@ async function getProfile() {
     },
     options: {
       responsive: true,
-      plugins: { legend: { display: false } }
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
   });
 

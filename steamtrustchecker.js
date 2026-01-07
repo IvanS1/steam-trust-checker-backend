@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-const STEAM_API_KEY = process.env.STEAM_API_KEY || 'CE910D32F9508B963444CAFF3F831E0C';
+const STEAM_API_KEY = process.env.STEAM_API_KEY || 'TU_API_KEY_AQUI';
 
 /* ───────── HOME ───────── */
 app.get('/', (req, res) => {
@@ -57,7 +57,7 @@ app.get('/api/profile', async (req, res) => {
 
     const p = profileRes.data.response.players[0];
 
-    /* 4️⃣ Juegos */
+    /* 4️⃣ Juegos (INCLUYE playtime_2weeks) */
     const gamesRes = await axios.get(
       'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
       {
@@ -70,17 +70,18 @@ app.get('/api/profile', async (req, res) => {
         }
       }
     );
-    
 
     const games = gamesRes.data.response.games || [];
 
+    /* 5️⃣ Horas totales (forever + recent) */
     const totalMinutes = games.reduce(
-      (sum, g) => sum + (g.playtime_forever || 0),
+      (sum, g) =>
+        sum + (g.playtime_forever || 0) + (g.playtime_2weeks || 0),
       0
     );
     const totalHours = Math.round(totalMinutes / 60);
 
-    /* 5️⃣ Nivel */
+    /* 6️⃣ Nivel */
     let level = 0;
     try {
       const levelRes = await axios.get(
@@ -90,7 +91,7 @@ app.get('/api/profile', async (req, res) => {
       level = levelRes.data.response.player_level;
     } catch {}
 
-    /* 6️⃣ Amigos (perfil privado safe) */
+    /* 7️⃣ Amigos (perfil privado safe) */
     let friendsCount = 0;
     try {
       const friendsRes = await axios.get(
@@ -106,31 +107,27 @@ app.get('/api/profile', async (req, res) => {
       }
     } catch {}
 
-    /* 7️⃣ Edad cuenta */
+    /* 8️⃣ Edad cuenta */
     const accountAgeYears = p.timecreated
       ? (Date.now() - p.timecreated * 1000) / (1000 * 60 * 60 * 24 * 365)
       : 10;
 
-    /* 8️⃣ HORAS CS2 (Trust Factor CS-only) */
+    /* 9️⃣ CS2 horas reales (forever + recent) */
     const csGame = games.find(g => g.appid === 730);
-    const csHours = csGame
-  ? Math.round(
-      ((csGame.playtime_forever || 0) + (csGame.playtime_2weeks || 0)) / 60
-    )
-  : 0;
+    const csMinutes = csGame
+      ? (csGame.playtime_forever || 0) + (csGame.playtime_2weeks || 0)
+      : 0;
+    const csHours = Math.round(csMinutes / 60);
 
-
-    /* 9️⃣ Trust Factor (CS-only) */
+    /* 🔟 Trust Factor (CS-only) */
     let trustFactor = 30;
-
     if (csHours > 100) trustFactor += 20;
     if (csHours > 500) trustFactor += 25;
     if (level > 20) trustFactor += 10;
     if (friendsCount > 50) trustFactor += 10;
-
     trustFactor = Math.min(trustFactor, 100);
 
-    /* 🔟 Respuesta final */
+    /* 1️⃣1️⃣ Respuesta */
     const response = {
       steamid,
       profileImage: p.avatarfull,
@@ -146,7 +143,8 @@ app.get('/api/profile', async (req, res) => {
         level,
         friendsCount,
         accountAgeYears: Math.floor(accountAgeYears),
-        games
+        games,
+        csDataVisible: csMinutes > 0
       }
     };
 

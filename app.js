@@ -121,7 +121,7 @@ async function getProfile() {
   
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
   
-        ctx.drawImage(icon, y.left - 40, yPos - 8, 16, 16);
+        ctx.drawImage(icon, y.left - 26, yPos - 8, 16, 16);
 
       });
   

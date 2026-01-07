@@ -105,15 +105,19 @@ async function getProfile() {
     afterDatasetsDraw(chart) {
       const { ctx, chartArea, scales: { y } } = chart;
       ctx.save();
-
+  
       topGames.forEach(game => {
         const yPos = y.getPixelForValue(game.name);
         const icon = icons[game.appid];
+  
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
-
-        ctx.drawImage(icon, chartArea.left - 18, yPos - 9, 18, 18);
+  
+        // 📐 Posición limpia entre texto y barra
+        const iconX = chartArea.left - 28;
+  
+        ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
       });
-
+  
       ctx.restore();
     }
   };
@@ -133,7 +137,7 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 80,
+          left: 200,
           right: 20
         }
       },
@@ -155,7 +159,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 32
+            padding: 4
           }
         }
       }

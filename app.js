@@ -1,9 +1,16 @@
 let chart;
 
 async function getProfile() {
-  const url = document.getElementById('steam-url').value;
+  const url = document.getElementById('steam-url').value.trim();
+  if (!url) return alert('Introduce una URL de Steam');
+
   const res = await fetch(`/api/profile?url=${encodeURIComponent(url)}`);
   const data = await res.json();
+
+  if (!res.ok || data.error) {
+    alert(data.error || 'Error al obtener el perfil');
+    return;
+  }
 
   document.getElementById('profile-image').src = data.profileImage;
 
@@ -12,6 +19,7 @@ async function getProfile() {
     <p>Juegos: ${data.stats.gamesPlayed}</p>
     <p>Horas totales: ${data.stats.totalPlaytimeHours}</p>
     <p>Nivel Steam: ${data.extra.level}</p>
+    <p>Amigos visibles: ${data.extra.friendsCount}</p>
   `;
 
   /* Trust bar */
@@ -26,11 +34,12 @@ async function getProfile() {
     data.smurf ? 'block' : 'none';
 
   /* Chart */
-  const topGames = data.extra.games
+  const topGames = (data.extra.games || [])
     .sort((a, b) => b.playtime_forever - a.playtime_forever)
     .slice(0, 5);
 
   if (chart) chart.destroy();
+
   chart = new Chart(document.getElementById('hoursChart'), {
     type: 'bar',
     data: {
@@ -40,6 +49,10 @@ async function getProfile() {
         data: topGames.map(g => Math.round(g.playtime_forever / 60)),
         backgroundColor: '#4CAF50'
       }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } }
     }
   });
 }

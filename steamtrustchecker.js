@@ -88,20 +88,33 @@ app.get('/api/profile', async (req, res) => {
       level = levelRes.data.response.player_level;
     } catch {}
 
-    /* 6️⃣ AMIGOS */
-    let friendsCount = 0;
-    try {
-      const friendsRes = await axios.get(
-        'https://api.steampowered.com/ISteamUser/GetFriendList/v1/',
-        { params: { key: STEAM_API_KEY, steamid } }
-      );
-      friendsCount = friendsRes.data.friendslist.friends.length;
-    } catch {}
+   /* 6️⃣ AMIGOS */
+let friendsCount = 0;
+try {
+  const friendsRes = await axios.get(
+    'https://api.steampowered.com/ISteamUser/GetFriendList/v1/',
+    { params: { key: STEAM_API_KEY, steamid } }
+  );
+
+  if (
+    friendsRes.data &&
+    friendsRes.data.friendslist &&
+    Array.isArray(friendsRes.data.friendslist.friends)
+  ) {
+    friendsCount = friendsRes.data.friendslist.friends.length;
+  } else {
+    friendsCount = 0; // perfil privado
+  }
+} catch {
+  friendsCount = 0; // perfil privado o error → NO rompe nada
+}
+
 
     /* 7️⃣ DETECCIÓN DE SMURF (REALISTA) */
-    const accountAgeYears =
-      (Date.now() - p.timecreated * 1000) /
-      (1000 * 60 * 60 * 24 * 365);
+    const accountAgeYears = p.timecreated
+  ? (Date.now() - p.timecreated * 1000) / (1000 * 60 * 60 * 24 * 365)
+  : 10; // si no se puede leer, asumimos cuenta antigua
+
 
     const smurf =
       accountAgeYears < 1 &&

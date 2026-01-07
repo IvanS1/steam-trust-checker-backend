@@ -62,6 +62,23 @@ async function getProfile() {
     <p>Amigos visibles: ${data.extra.friendsCount}</p>
   `;
 
+  // === TRUST FACTOR BAR ===
+  const trustFactor = data.trustFactor;
+
+  const trustBar = document.getElementById('trust-factor');
+  const trustText = document.getElementById('trust-factor-text');
+
+  trustBar.style.width = trustFactor + '%';
+  trustText.textContent = trustFactor + '%';
+
+  if (trustFactor < 40) {
+    trustBar.style.background = '#e53935';
+  } else if (trustFactor < 70) {
+    trustBar.style.background = '#fbc02d';
+  } else {
+    trustBar.style.background = '#43a047';
+  }
+
   /* Aviso CS2 */
   document.getElementById('cs-warning').style.display =
     data.extra.csDataVisible ? 'none' : 'block';

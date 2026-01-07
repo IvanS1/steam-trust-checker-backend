@@ -64,131 +64,103 @@ async function getProfile() {
     <p>Amigos visibles: ${data.extra.friendsCount}</p>
   `;
 
-  // === TRUST FACTOR BAR ===
-  const trustFactor = data.trustFactor;
-
   const trustBar = document.getElementById('trust-factor');
   const trustText = document.getElementById('trust-factor-text');
 
-  trustBar.style.width = trustFactor + '%';
-  trustText.textContent = trustFactor + '%';
+  trustBar.style.width = `${data.trustFactor}%`;
+  trustText.textContent = `${data.trustFactor}%`;
 
-  if (trustFactor < 40) {
-    trustBar.style.background = '#e53935';
-  } else if (trustFactor < 70) {
-    trustBar.style.background = '#fbc02d';
-  } else {
-    trustBar.style.background = '#43a047';
-  }
-
-  /* Aviso CS2 */
-  document.getElementById('cs-warning').style.display =
-    data.extra.csDataVisible ? 'none' : 'block';
-
-  /* Trust bar */
-  const bar = document.getElementById('trust-factor');
-  bar.style.width = `${data.trustFactor}%`;
-  bar.style.backgroundColor =
+  trustBar.style.backgroundColor =
     data.trustFactor > 70 ? 'green' :
     data.trustFactor > 40 ? 'yellow' : 'red';
 
- /* ───── CHART TOP 20 JUEGOS (HORIZONTAL + ICONOS STEAM) ───── */
+  document.getElementById('cs-warning').style.display =
+    data.extra.csDataVisible ? 'none' : 'block';
 
-const topGames = (data.extra.games || [])
-.map(g => ({
-  appid: g.appid,
-  name: g.name,
-  icon: g.img_icon_url,
-  hours: Math.round(
-    ((g.playtime_forever || 0) + (g.playtime_2weeks || 0)) / 60
-  )
-}))
-.filter(g => g.hours > 0 && g.icon)
-.sort((a, b) => b.hours - a.hours)
-.slice(0, 20);
+  /* ───── Chart ───── */
+  const topGames = (data.extra.games || [])
+    .map(g => ({
+      appid: g.appid,
+      name: g.name,
+      icon: g.img_icon_url,
+      hours: Math.round(
+        ((g.playtime_forever || 0) + (g.playtime_2weeks || 0)) / 60
+      )
+    }))
+    .filter(g => g.hours > 0 && g.icon)
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 20);
 
-if (chart) chart.destroy();
+  if (chart) chart.destroy();
 
-/* ───── Precargar iconos Steam ───── */
-const icons = {};
-topGames.forEach(g => {
-const img = new Image();
-img.src = `https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.icon}.jpg`;
-icons[g.appid] = img;
-});
+  const icons = {};
+  topGames.forEach(g => {
+    const img = new Image();
+    img.src = `https://media.steampowered.com/steamcommunity/public/images/apps/${g.appid}/${g.icon}.jpg`;
+    icons[g.appid] = img;
+  });
 
-/* ───── Plugin iconos eje Y ───── */
-const yAxisIconPlugin = {
+  const yAxisIconPlugin = {
     id: 'yAxisIconPlugin',
     afterDatasetsDraw(chart) {
       const { ctx, chartArea, scales: { y } } = chart;
-  
       ctx.save();
-  
+
       topGames.forEach(game => {
         const yPos = y.getPixelForValue(game.name);
         const icon = icons[game.appid];
-  
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
-  
-        ctx.drawImage(
-          icon,
-          chartArea.left - 18, // después del texto, antes de la barra
-          yPos - 9,
-          18,
-          18
-        );
+
+        ctx.drawImage(icon, chartArea.left - 18, yPos - 9, 18, 18);
       });
-  
+
       ctx.restore();
     }
   };
-  
 
-chart = new Chart(document.getElementById('hoursChart'), {
-type: 'bar',
-data: {
-  labels: topGames.map(g => g.name),
-  datasets: [{
-    data: topGames.map(g => g.hours),
-    backgroundColor: '#4CAF50'
-  }]
-},
-plugins: [ChartDataLabels, yAxisIconPlugin],
-options: {
-  indexAxis: 'y',
-  responsive: true,
-  layout: {
-    padding: {
-      left: 80,
-      right: 20
-    }
-  },
-  plugins: {
-    legend: { display: false },
-    datalabels: {
-      anchor: 'end',
-      align: 'right',
-      color: '#ffffff',
-      font: { weight: 'bold', size: 11 },
-      formatter: v => `${v}h`
-    }
-  },
-  scales: {
-    x: {
-      beginAtZero: true,
-      ticks: { callback: v => `${v}h` }
+  chart = new Chart(document.getElementById('hoursChart'), {
+    type: 'bar',
+    data: {
+      labels: topGames.map(g => g.name),
+      datasets: [{
+        data: topGames.map(g => g.hours),
+        backgroundColor: '#4CAF50'
+      }]
     },
-    y: {
-        ticks: {
-          color: '#cccccc',
-          padding: 32   // espacio entre texto e icono
+    plugins: [ChartDataLabels, yAxisIconPlugin],
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      layout: {
+        padding: {
+          left: 80,
+          right: 20
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'right',
+          color: '#ffffff',
+          font: { weight: 'bold', size: 11 },
+          formatter: v => `${v}h`
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          ticks: { callback: v => `${v}h` }
+        },
+        y: {
+          ticks: {
+            color: '#cccccc',
+            padding: 32
+          }
         }
       }
-      
-}
-});
-
+    }
+  });
 
   saveToRanking(data);
   renderRanking();

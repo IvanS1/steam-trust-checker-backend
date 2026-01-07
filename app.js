@@ -74,16 +74,15 @@ async function getProfile() {
 
   /* Chart (2weeks + forever FIX) */
   const topGames = (data.extra.games || [])
-    .map(g => ({
-      name: g.name,
-      minutes:
-        (g.playtime_2weeks || 0) > 0
-          ? g.playtime_2weeks
-          : (g.playtime_forever || 0)
-    }))
-    .filter(g => g.minutes > 0)
-    .sort((a, b) => b.minutes - a.minutes)
-    .slice(0, 5);
+  .map(g => ({
+    name: g.name,
+    minutes:
+      (g.playtime_forever || 0) + (g.playtime_2weeks || 0)
+  }))
+  .filter(g => g.minutes > 0)
+  .sort((a, b) => b.minutes - a.minutes)
+  .slice(0, 5);
+
 
   if (chart) chart.destroy();
   chart = new Chart(document.getElementById('hoursChart'), {

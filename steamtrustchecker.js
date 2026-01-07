@@ -65,10 +65,12 @@ app.get('/api/profile', async (req, res) => {
           key: STEAM_API_KEY,
           steamid,
           include_appinfo: true,
-          include_played_free_games: true
+          include_played_free_games: true,
+          include_playtime_2weeks: true
         }
       }
     );
+    
 
     const games = gamesRes.data.response.games || [];
 
@@ -112,12 +114,11 @@ app.get('/api/profile', async (req, res) => {
     /* 8️⃣ HORAS CS2 (Trust Factor CS-only) */
     const csGame = games.find(g => g.appid === 730);
     const csHours = csGame
-      ? Math.round(
-          ((csGame.playtime_2weeks || 0) > 0
-            ? csGame.playtime_2weeks
-            : csGame.playtime_forever || 0) / 60
-        )
-      : 0;
+  ? Math.round(
+      ((csGame.playtime_forever || 0) + (csGame.playtime_2weeks || 0)) / 60
+    )
+  : 0;
+
 
     /* 9️⃣ Trust Factor (CS-only) */
     let trustFactor = 30;

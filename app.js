@@ -92,7 +92,7 @@ async function getProfile() {
     data.trustFactor > 70 ? 'green' :
     data.trustFactor > 40 ? 'yellow' : 'red';
 
-    /* ───── CHART TOP 20 JUEGOS (HORIZONTAL + ICONO) ───── */
+ /* ───── CHART TOP 20 JUEGOS (HORIZONTAL + ICONOS STEAM) ───── */
 
 const topGames = (data.extra.games || [])
 .map(g => ({
@@ -108,7 +108,7 @@ const topGames = (data.extra.games || [])
 
 if (chart) chart.destroy();
 
-/* Pre-cargar iconos */
+/* ───── Precargar iconos de Steam ───── */
 const icons = {};
 topGames.forEach(g => {
 const img = new Image();
@@ -116,7 +116,7 @@ img.src = `https://cdn.cloudflare.steamstatic.com/steam/apps/${g.appid}/icon.jpg
 icons[g.appid] = img;
 });
 
-/* Plugin: icono en eje Y */
+/* ───── Plugin para dibujar iconos en el eje Y ───── */
 const yAxisIconPlugin = {
 id: 'yAxisIconPlugin',
 afterDraw(chart) {
@@ -126,8 +126,14 @@ afterDraw(chart) {
     const yPos = y.getPixelForTick(index);
     const icon = icons[game.appid];
 
-    if (icon?.complete) {
-      ctx.drawImage(icon, y.left - 26, yPos - 8, 16, 16);
+    if (icon && icon.complete) {
+      ctx.drawImage(
+        icon,
+        y.left - 30,   // posición a la izquierda del texto
+        yPos - 9,
+        18,
+        18
+      );
     }
   });
 }
@@ -148,7 +154,7 @@ options: {
   responsive: true,
   layout: {
     padding: {
-      left: 40,
+      left: 50,   // espacio extra para los iconos
       right: 20
     }
   },
@@ -180,6 +186,7 @@ options: {
   }
 }
 });
+
 
   saveToRanking(data);
   renderRanking();

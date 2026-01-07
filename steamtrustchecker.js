@@ -10,10 +10,9 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '/')));
+app.use(express.static(path.join(__dirname)));
 
-const STEAM_API_KEY =
-  process.env.STEAM_API_KEY || 'CE910D32F9508B963444CAFF3F831E0C';
+const STEAM_API_KEY = process.env.STEAM_API_KEY || 'CE910D32F9508B963444CAFF3F831E0C';
 
 /* ───────── HOME ───────── */
 app.get('/', (req, res) => {
@@ -46,11 +45,11 @@ app.get('/api/profile', async (req, res) => {
       return res.status(400).json({ error: 'URL de Steam inválida' });
     }
 
-    /* 2️⃣ CACHE */
+    /* 2️⃣ Cache */
     const cached = getCache(steamid);
     if (cached) return res.json(cached);
 
-    /* 3️⃣ PERFIL */
+    /* 3️⃣ Perfil */
     const profileRes = await axios.get(
       'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/',
       { params: { key: STEAM_API_KEY, steamids: steamid } }
@@ -58,7 +57,7 @@ app.get('/api/profile', async (req, res) => {
 
     const p = profileRes.data.response.players[0];
 
-    /* 4️⃣ JUEGOS */
+    /* 4️⃣ Juegos */
     const gamesRes = await axios.get(
       'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
       {
@@ -72,13 +71,14 @@ app.get('/api/profile', async (req, res) => {
     );
 
     const games = gamesRes.data.response.games || [];
+
     const totalMinutes = games.reduce(
       (sum, g) => sum + (g.playtime_forever || 0),
       0
     );
     const totalHours = Math.round(totalMinutes / 60);
 
-    /* 5️⃣ NIVEL */
+    /* 5️⃣ Nivel */
     let level = 0;
     try {
       const levelRes = await axios.get(
@@ -88,64 +88,63 @@ app.get('/api/profile', async (req, res) => {
       level = levelRes.data.response.player_level;
     } catch {}
 
-   /* 6️⃣ AMIGOS */
-let friendsCount = 0;
-try {
-  const friendsRes = await axios.get(
-    'https://api.steampowered.com/ISteamUser/GetFriendList/v1/',
-    { params: { key: STEAM_API_KEY, steamid } }
-  );
+    /* 6️⃣ Amigos (perfil privado safe) */
+    let friendsCount = 0;
+    try {
+      const friendsRes = await axios.get(
+        'https://api.steampowered.com/ISteamUser/GetFriendList/v1/',
+        { params: { key: STEAM_API_KEY, steamid } }
+      );
 
-  if (
-    friendsRes.data &&
-    friendsRes.data.friendslist &&
-    Array.isArray(friendsRes.data.friendslist.friends)
-  ) {
-    friendsCount = friendsRes.data.friendslist.friends.length;
-  } else {
-    friendsCount = 0; // perfil privado
-  }
-} catch {
-  friendsCount = 0; // perfil privado o error → NO rompe nada
-}
+      if (
+        friendsRes.data?.friendslist?.friends &&
+        Array.isArray(friendsRes.data.friendslist.friends)
+      ) {
+        friendsCount = friendsRes.data.friendslist.friends.length;
+      }
+    } catch {}
 
-
-    /* 7️⃣ DETECCIÓN DE SMURF (REALISTA) */
+    /* 7️⃣ Edad cuenta */
     const accountAgeYears = p.timecreated
-  ? (Date.now() - p.timecreated * 1000) / (1000 * 60 * 60 * 24 * 365)
-  : 10; // si no se puede leer, asumimos cuenta antigua
+      ? (Date.now() - p.timecreated * 1000) / (1000 * 60 * 60 * 24 * 365)
+      : 10;
 
+    /* 8️⃣ HORAS CS2 (Trust Factor CS-only) */
+    const csGame = games.find(g => g.appid === 730);
+    const csHours = csGame
+      ? Math.round(
+          ((csGame.playtime_2weeks || 0) > 0
+            ? csGame.playtime_2weeks
+            : csGame.playtime_forever || 0) / 60
+        )
+      : 0;
 
-    const smurf =
-      accountAgeYears < 1 &&
-      level < 10 &&
-      totalHours > 300 &&
-      friendsCount < 20;
-
-    /* 8️⃣ TRUST FACTOR */
+    /* 9️⃣ Trust Factor (CS-only) */
     let trustFactor = 30;
-    if (totalHours > 300) trustFactor += 20;
-    if (totalHours > 1000) trustFactor += 20;
-    if (level > 20) trustFactor += 15;
-    if (friendsCount > 50) trustFactor += 15;
-    if (!smurf) trustFactor += 10;
+
+    if (csHours > 100) trustFactor += 20;
+    if (csHours > 500) trustFactor += 25;
+    if (level > 20) trustFactor += 10;
+    if (friendsCount > 50) trustFactor += 10;
 
     trustFactor = Math.min(trustFactor, 100);
 
-    /* 9️⃣ RESPUESTA FINAL */
+    /* 🔟 Respuesta final */
     const response = {
+      steamid,
       profileImage: p.avatarfull,
       stats: {
         gamesPlayed: games.length,
-        totalPlaytimeHours: totalHours
+        totalPlaytimeHours: totalHours,
+        csHours
       },
       trustFactor,
-      smurf,
       extra: {
         personaname: p.personaname,
         country: p.loccountrycode || 'N/A',
         level,
         friendsCount,
+        accountAgeYears: Math.floor(accountAgeYears),
         games
       }
     };

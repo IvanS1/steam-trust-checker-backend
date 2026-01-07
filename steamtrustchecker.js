@@ -1,17 +1,20 @@
 const express = require('express');
-const cors = require('cors');
+const cors = require('cors'); // 1. Importa cors
 const axios = require('axios');
-const path = require('path');
+const path = require('path'); // Añade esto
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000; // Render usa process.env.PORT
 
 app.use(cors());
-// Servir archivos estáticos desde la raíz
 app.use(express.static(path.join(__dirname, '/')));
 
 const STEAM_API_KEY = 'CE910D32F9508B963444CAFF3F831E0C';
 
+// 1. Servir archivos estáticos (index.html, style.css, app.js)
+app.use(express.static(path.join(__dirname, '/')));
+
+// 2. Ruta para el Home (opcional si usas express.static, pero recomendado)
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -25,92 +28,116 @@ app.get('/api/profile', async (req, res) => {
     try {
         let steamId64 = null;
 
-        // 1️⃣ RESOLVER STEAMID64 (Corregido)
-        const profileMatch = steamURL.match(/profiles\/(\d{17})/);
-        const vanityMatch = steamURL.match(/id\/([^\/]+)/);
+        // ─────────────────────────────
+        // 1️⃣ EXTRAER O RESOLVER STEAMID
+        // ─────────────────────────────
 
+        // profiles/STEAMID64
+        const profileMatch = steamURL.match(/profiles\/(\d{17})/);
         if (profileMatch) {
             steamId64 = profileMatch[1];
-        } else if (vanityMatch) {
+        }
+
+        // id/vanityname
+        const vanityMatch = steamURL.match(/id\/([^\/]+)/);
+        if (!steamId64 && vanityMatch) {
             const vanityName = vanityMatch[1];
-            const vanityRes = await axios.get('api.steampowered.com', {
-                params: { key: STEAM_API_KEY, vanityurl: vanityName }
-            });
-            if (vanityRes.data.response.success === 1) {
-                steamId64 = vanityRes.data.response.steamid;
+
+            const vanityRes = await axios.get(
+                'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/',
+                {
+                    params: {
+                        key: STEAM_API_KEY,
+                        vanityurl: vanityName
+                    }
+                }
+            );
+
+            if (vanityRes.data.response.success !== 1) {
+                return res.status(404).json({ error: 'Perfil de Steam no encontrado' });
             }
+
+            steamId64 = vanityRes.data.response.steamid;
         }
 
         if (!steamId64) {
-            return res.status(400).json({ error: 'URL de Steam inválida o perfil no encontrado' });
+            return res.status(400).json({ error: 'URL de Steam inválida' });
         }
 
-        // 2️⃣ OBTENER DATOS EN PARALELO (Summaries + Bans + Games)
-        const [profileRes, bansRes, gamesRes] = await Promise.all([
-            axios.get('api.steampowered.com', { params: { key: STEAM_API_KEY, steamids: steamId64 } }),
-            axios.get('api.steampowered.com', { params: { key: STEAM_API_KEY, steamids: steamId64 } }),
-            axios.get('api.steampowered.com', { params: { key: STEAM_API_KEY, steamid: steamId64, include_played_free_games: true } })
-        ]);
+        // ─────────────────────────────
+        // 2️⃣ DATOS DEL PERFIL
+        // ─────────────────────────────
+
+        const profileRes = await axios.get(
+            'https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/',
+            {
+                params: {
+                    key: STEAM_API_KEY,
+                    steamids: steamId64
+                }
+            }
+        );
 
         const player = profileRes.data.response.players[0];
         if (!player) {
             return res.status(404).json({ error: 'Perfil de Steam no encontrado' });
         }
 
+        // ─────────────────────────────
+        // 3️⃣ JUEGOS Y TIEMPO JUGADO
+        // ─────────────────────────────
+
+        const gamesRes = await axios.get(
+            'https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/',
+            {
+                params: {
+                    key: STEAM_API_KEY,
+                    steamid: steamId64,
+                    include_played_free_games: true
+                }
+            }
+        );
+
         const games = gamesRes.data.response.games || [];
-        const bans = bansRes.data.players[0] || {};
+        const gamesPlayed = games.length;
 
-        // 3️⃣ CÁLCULOS DE ESTADÍSTICAS
-        const totalPlaytime = games.reduce((sum, game) => sum + (game.playtime_forever || 0), 0);
+        const totalPlaytime = games.reduce(
+            (sum, game) => sum + (game.playtime_forever || 0),
+            0
+        );
+
+        // minutos → horas
         const totalHours = Math.round(totalPlaytime / 60);
-        
-        // Buscar horas específicas de CS2 (AppID 730)
-        const cs2Game = games.find(g => g.appid === 730);
-        const cs2Hours = cs2Game ? Math.round(cs2Game.playtime_forever / 60) : 0;
 
-        // 4️⃣ ALGORITMO DE TRUST FACTOR ESTIMADO (0-100)
-        let trustFactor = 20; // Base inicial baja
+        // ─────────────────────────────
+        // 4️⃣ TRUST FACTOR (EJEMPLO)
+        // ─────────────────────────────
 
-        // Puntos por horas totales y CS2
-        if (cs2Hours > 1000) trustFactor += 30;
-        else if (cs2Hours > 200) trustFactor += 15;
-        
-        if (totalHours > 3000) trustFactor += 20;
-        
-        // Puntos por antigüedad (si el perfil es público y muestra fecha de creación)
-        if (player.timecreated) {
-            const currentTimestamp = Math.floor(Date.now() / 1000);
-            const accountAgeYears = (currentTimestamp - player.timecreated) / (3600 * 24 * 365);
-            if (accountAgeYears > 10) trustFactor += 20;
-            else if (accountAgeYears > 5) trustFactor += 10;
-        }
+        let trustFactor = 40;
+        if (totalHours > 2000) trustFactor = 100;
+        else if (totalHours > 1000) trustFactor = 80;
+        else if (totalHours > 300) trustFactor = 60;
 
-        // Penalización por BANEOS (Crítico)
-        if (bans.VACBanned || bans.NumberOfGameBans > 0 || bans.CommunityBanned) {
-            trustFactor = Math.max(10, trustFactor - 60); // Baja drásticamente pero no a 0
-        }
+        // ─────────────────────────────
+        // RESPUESTA FINAL
+        // ─────────────────────────────
 
-        // Limitar entre 0 y 100
-        trustFactor = Math.min(100, Math.max(0, trustFactor));
-
-        // 5️⃣ RESPUESTA FINAL
         res.json({
             profileImage: player.avatarfull,
             stats: {
-                gamesPlayed: games.length,
-                totalPlaytimeHours: totalHours,
-                cs2Hours: cs2Hours,
-                vacBanned: bans.VACBanned
+                gamesPlayed,
+                totalPlaytimeHours: totalHours
             },
-            trustFactor: trustFactor
+            trustFactor
         });
 
     } catch (err) {
-        console.error("Error en servidor:", err.message);
+        console.error(err.message);
         res.status(500).json({ error: 'Error al obtener datos de Steam' });
     }
 });
 
+// IMPORTANTE: Cambia el app.listen para Render
 app.listen(port, '0.0.0.0', () => {
     console.log(`Servidor activo en el puerto ${port}`);
 });

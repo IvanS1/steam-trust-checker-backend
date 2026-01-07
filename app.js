@@ -115,7 +115,7 @@ async function getProfile() {
         // 📐 Posición limpia entre texto y barra
         const iconX = chartArea.left - 28;
   
-        ctx.drawImage(icon, iconX, yPos - 5, 18, 18);
+        ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
       });
   
       ctx.restore();
@@ -138,7 +138,7 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 100,
+          left: 200,
           right: 20
         }
       },

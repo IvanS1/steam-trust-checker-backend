@@ -162,7 +162,7 @@ async function getProfile() {
         legend: { display: false },
         datalabels: {
           anchor: 'end',
-          align: 'right',
+          align: 'left',
           color: '#ffffff',
           font: {
             weight: 'bold',

@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Trust Factor Checker</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Steam Trust Factor Checker</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Comprobador de Trust Factor de Steam</h1>
-        <input type="text" id="steam-url" placeholder="Introduce la URL del perfil de Steam" />
-        <button onclick="getProfile()">Comprobar</button>
+<div class="container">
+  <h1>Comprobador de Trust Factor de Steam</h1>
 
-        <div id="profile-info">
-            <img id="profile-image" src="" alt="Imagen del perfil" />
-            <div id="stats"></div>
-            <div id="trust-factor-bar">
-                <div id="trust-factor"></div>
-            </div>
-            <div id="smurf-message" style="display: none;">¡Este jugador podría ser un smurf!</div>
-        </div>
-    </div>
+  <input id="steam-url" placeholder="URL del perfil de Steam">
+  <button onclick="getProfile()">Comprobar</button>
 
-    <script src="app.js"></script>
+  <img id="profile-image">
+  <div id="stats"></div>
+
+  <div id="trust-factor-bar">
+    <div id="trust-factor"></div>
+  </div>
+
+  <div id="smurf-message" style="display:none;">
+    ⚠️ Posible cuenta smurf detectada
+  </div>
+
+  <canvas id="hoursChart"></canvas>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
-

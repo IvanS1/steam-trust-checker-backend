@@ -116,29 +116,35 @@ async function getProfile() {
       }]
     },
     options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        datalabels: {
-          anchor: 'end',
-          align: 'end',
-          color: '#ffffff',
-          font: {
-            weight: 'bold',
-            size: 11
-          },
-          formatter: (value) => `${value}h`
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: (value) => `${value}h`
+        responsive: true,
+        layout: {
+          padding: {
+            top: 25
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'end',
+            color: '#ffffff',
+            font: {
+              weight: 'bold',
+              size: 11
+            },
+            formatter: (value) => `${value}h`
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => `${value}h`
+            }
           }
         }
       }
-    }
+      
   });
 
   saveToRanking(data);

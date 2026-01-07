@@ -105,18 +105,23 @@ async function getProfile() {
     afterDatasetsDraw(chart) {
       const { ctx, chartArea, scales: { y } } = chart;
       ctx.save();
-
+  
       topGames.forEach(game => {
         const yPos = y.getPixelForValue(game.name);
         const icon = icons[game.appid];
+  
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
-
-        ctx.drawImage(icon, chartArea.left - 18, yPos - 9, 18, 18);
+  
+        // 📐 Posición limpia entre texto y barra
+        const iconX = chartArea.left - 40;
+  
+        ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
       });
-
+  
       ctx.restore();
     }
   };
+  
 
   chart = new Chart(document.getElementById('hoursChart'), {
     type: 'bar',
@@ -133,8 +138,8 @@ async function getProfile() {
       responsive: true,
       layout: {
         padding: {
-          left: 80,
-          right: 0
+          left: 140,
+          right: 20
         }
       },
       plugins: {
@@ -155,7 +160,7 @@ async function getProfile() {
         y: {
           ticks: {
             color: '#cccccc',
-            padding: 32
+            padding: 10
           }
         }
       }

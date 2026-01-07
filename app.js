@@ -106,21 +106,34 @@ async function getProfile() {
       const { ctx, chartArea, scales: { y } } = chart;
       ctx.save();
   
+      // 📐 ancho reservado para labels (debe coincidir con layout.padding.left)
+      const LABEL_WIDTH = 220;
+  
+      // 📐 tamaño del icono
+      const ICON_SIZE = 18;
+  
+      // 📐 posición X centrada entre texto y barra
+      const iconX = chartArea.left - (LABEL_WIDTH / 2) - (ICON_SIZE / 2) + 10;
+  
       topGames.forEach(game => {
         const yPos = y.getPixelForValue(game.name);
         const icon = icons[game.appid];
   
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
   
-        // 📐 Posición limpia entre texto y barra
-        const iconX = chartArea.left - 28;
-  
-        ctx.drawImage(icon, iconX, yPos - 9, 18, 18);
+        ctx.drawImage(
+          icon,
+          iconX,
+          yPos - ICON_SIZE / 2,
+          ICON_SIZE,
+          ICON_SIZE
+        );
       });
   
       ctx.restore();
     }
   };
+  
 
   chart = new Chart(document.getElementById('hoursChart'), {
     type: 'bar',

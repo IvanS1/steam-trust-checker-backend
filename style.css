@@ -156,11 +156,13 @@
   
     height: 520px;
     position: relative;
-  
-    display: flex;                 /* 🔴 CLAVE */
-    justify-content: center;       /* 🔴 CLAVE */
-    align-items: center;           /* 🔴 CLAVE */
   }
+  #hoursChart {
+    display: block;
+    margin: 0 auto;     /* 🔑 centra el canvas real */
+    width: 100% !important;
+    height: 100% !important;
+  }  
 
   .chart-card canvas {
     width: 100% !important;

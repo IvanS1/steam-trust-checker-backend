@@ -121,13 +121,8 @@ async function getProfile() {
   
         if (!icon || !icon.complete || icon.naturalWidth === 0) return;
   
-        ctx.drawImage(
-          icon,
-          iconX,
-          yPos - ICON_SIZE / 2,
-          ICON_SIZE,
-          ICON_SIZE
-        );
+        ctx.drawImage(icon, y.left - 40, yPos - 8, 16, 16);
+
       });
   
       ctx.restore();
@@ -153,10 +148,13 @@ async function getProfile() {
   
       layout: {
         padding: {
-          left: 220,
-          right: 20
+          left: 160,   // 🔑 espacio fijo para nombres + iconos
+          right: 40,
+          top: 10,
+          bottom: 10
         }
       },
+      
   
       plugins: {
         legend: { display: false },
